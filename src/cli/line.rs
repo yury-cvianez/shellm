@@ -1,8 +1,7 @@
 // input and output a line command to the shell
 
 use std::io::{stdin};
-
-use crate::cli::line;
+use std::mem::replace;
 
 
 enum InputEvent{
@@ -30,25 +29,28 @@ impl LineEditor {
         }
     }
 
-    pub fn process_input(&mut self, event: InputEvent) {
+    pub fn process_input(&mut self, event: InputEvent) -> Option<String>{
         match event {
 
             InputEvent::Character(c) => {
                 // Insert the character at the current cursor position
                 self.buffer.insert(self.cursor, c);
                 self.cursor += 1;
+                None
             }
 
             InputEvent::ArrowLeft => {
                 if self.cursor > 0 {
                     self.cursor -= 1;
                 }
+                None
             }
 
             InputEvent::ArrowRight => {
                 if self.cursor < self.buffer.len() {
                     self.cursor += 1;
                 }
+                None
             }
 
             InputEvent::Backspace => {
@@ -56,6 +58,7 @@ impl LineEditor {
                     self.buffer.remove(self.cursor - 1);
                     self.cursor -= 1;
                 }
+                None
             }
 
 
@@ -63,13 +66,16 @@ impl LineEditor {
                 if self.cursor < self.buffer.len() {
                     self.buffer.remove(self.cursor);
                 }
+                None
             }
 
             InputEvent::Enter => {
-                //let line_complete: String = self.buffer.iter().collect::<String>();
+                let line = self.buffer.iter().collect::<String>();
+                replace(&mut self.buffer, Vec::new());
 
-                self.buffer.clear();
                 self.cursor = 0;
+
+                Some(line)
             }
         }
 
