@@ -1,18 +1,43 @@
 // input and output a line command to the shell
 
+/*
+
+The workflow is as follows: we receive a character typed by the user, 
+the input decoder processes the character's byte, determines the state, and accumulates the sequence until an event is formed; 
+once the event is formed, the editor—which already holds the buffer and the cursor—receives the event and makes the necessary modifications.
+
+DecoderState: Where do I stand in the interpretation?
+InputDecoder: I received a new byte; what is my current state, and what is the next state based on this new byte?
+LineEditor:  I have the buffer and the cursor position; now I've received an event and need to modify the buffer, the cursor, or both.
+
+*/
+
 use std::io::{stdin};
 use std::mem::replace;
 
 
-enum InputEvent{
+enum DecoderState {
+    // Defines states used to identify the input event.
+    Normal,
+    Escape,
+    CSI,
+}
+struct InputDecoder {
+    // Decodes the input events from the user
+    state: DecoderState,
+    //process_byte()
+}
+
+enum InputEvent {
     // Define movements to edit the text
     Character(char),
     ArrowLeft,
     ArrowRight,
     Backspace,
     Delete,
-    Enter
+    Enter,
 }
+
 struct LineEditor{
     // Saves the real-time state of what the user types.
     buffer   : Vec<char>,
@@ -25,7 +50,7 @@ impl LineEditor {
         // Initialize a new LineEditor with an empty buffer and cursor at position 0
         LineEditor {
             buffer: Vec::new(),
-            cursor: 0
+            cursor: 0,
         }
     }
 
@@ -33,7 +58,6 @@ impl LineEditor {
         match event {
 
             InputEvent::Character(c) => {
-                // Insert the character at the current cursor position
                 self.buffer.insert(self.cursor, c);
                 self.cursor += 1;
                 None
