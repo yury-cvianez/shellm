@@ -8,7 +8,7 @@ once the event is formed, the editor—which already holds the buffer and the cu
 
 DecoderState: Where do I stand in the interpretation?
 InputDecoder: I received a new byte; what is my current state, and what is the next state based on this new byte?
-LineEditor:  I have the buffer and the cursor position; now I've received an event and need to modify the buffer, the cursor, or both.
+LineEditor: I have the buffer and the cursor position; now I've received an event and need to modify the buffer, the cursor, or both.
 
 */
 
@@ -25,7 +25,42 @@ enum DecoderState {
 struct InputDecoder {
     // Decodes the input events from the user
     state: DecoderState,
-    //process_byte()
+    utf8_buffer: Vec<u8>,
+    utf8_length: usize,
+}
+
+impl InputDecoder {
+    pub fn new() -> Self {
+        InputDecoder {
+            state: DecoderState::Normal, 
+            utf8_buffer: Vec::new(),
+            utf8_length: 0
+        }
+        
+    }
+
+    pub fn process_byte(&mut self, byte: u8) -> Option<InputEvent> {
+        match self.state {
+
+            DecoderState::Normal => {
+                match byte {
+                    b'\x1b' => {
+                        self.state = DecoderState::Escape;
+                        Some(InputEvent::Character('\x1b'))
+                    },
+                    b']' =>{
+                        self.state = DecoderState::CSI;
+                        Some(InputEvent::Character(']'))
+                    },
+                    _  =>{
+                        Some(InputEvent::Character(byte as char))
+                    }
+                }
+            }
+            
+        }
+
+    }
 }
 
 enum InputEvent {
@@ -47,7 +82,6 @@ struct LineEditor{
 impl LineEditor {
     
     pub fn new() -> Self {
-        // Initialize a new LineEditor with an empty buffer and cursor at position 0
         LineEditor {
             buffer: Vec::new(),
             cursor: 0,
