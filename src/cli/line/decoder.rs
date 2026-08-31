@@ -20,6 +20,7 @@ enum DecoderState {
 struct InputDecoder {
     state   : DecoderState,
     utf8    : Utf8Decoder,
+    csi     : CSIDecoder,
     
     sequence_buffer : Vec<u8>,
     pending_events  : VecDeque<InputEvent>,
@@ -32,6 +33,7 @@ impl InputDecoder {
         InputDecoder {
             state   : DecoderState::Normal,
             utf8    : Utf8Decoder::new(),
+            csi     : CSIDecoder::new(),
             
             sequence_buffer : Vec::new(),
             pending_events  : VecDeque::new(),
@@ -167,6 +169,59 @@ impl InputDecoder {
     }
 
     fn _handle_csi(&mut self, byte: u8) {
+        
+        if byte == b'\x1b' {
+            let invalid = std::mem::take(&mut self.sequence_buffer);
+            self.pending_events.push_back(
+                InputEvent::Invalid(invalid)
+            );
+            
+            self.sequence_buffer.push(byte);
+
+            self.state = DecoderState::Escape
+            
+        } else if (0x40..=0x7E).contains(&byte) {
+            
+            self.sequence_buffer.push(byte);
+            
+            let sequence = std::mem::take(&mut self.sequence_buffer);
+            let result = self.csi.interprets(&sequence);
+
+            match result {
+
+                CSIResult::ArrowRight => {
+                    self.pending_events.push_back(
+                        InputEvent::ArrowRight
+                    );
+                    
+                    self.state = DecoderState::Normal;
+                },
+
+                CSIResult::ArrowLeft => {
+                    self.pending_events.push_back(
+                        InputEvent::ArrowLeft
+                    );
+                    
+                    self.state = DecoderState::Normal;
+                },
+                
+                CSIResult::Delete => {
+                    self.pending_events.push_back(
+                        InputEvent::Delete
+                    );
+                    
+                    self.state = DecoderState::Normal;
+                },
+
+                CSIResult::Invalid => {
+                    self.pending_events.push_back(
+                        InputEvent::Invalid(sequence)
+                    );
+                    
+                    self.state = DecoderState::Normal;
+                }
+            }
+        }
 
     }
 

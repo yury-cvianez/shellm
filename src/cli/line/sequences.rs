@@ -93,19 +93,25 @@ impl Utf8Decoder {
 pub enum CSIResult {
     ArrowLeft,
     ArrowRight,
-    ArrowUp,
-    ArrowDown,   
-    Invalid(char)
+    Delete,  
+    Invalid
 }
 
-pub struct CSIDecoder {   
-    specials_chars: Vec<u8>,
-}
+pub struct CSIDecoder;
 
-impl CSIDecoder{
-    pub fn new() -> Self {        
-        CSIDecoder { specials_chars: Vec::new() }
+impl CSIDecoder {
+    pub fn new() -> Self {
+            Self
+        }
+        
+    pub fn interprets (&self, buffer: &[u8]) -> CSIResult {
+        match buffer {
+            [0x1b, b'[', b'C'] => CSIResult::ArrowRight,
+            [0x1b, b'[', b'D'] => CSIResult::ArrowLeft,
+            [0x1b, b'[', b'3', b'~'] => CSIResult::Delete,
+
+            _ => CSIResult::Invalid,
+        }
+        
     }
-
-
 }
