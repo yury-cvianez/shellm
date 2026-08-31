@@ -1,6 +1,6 @@
 mod cli;
 
-use cli::line::{
+use cli::input::{
     read_line,
 };
 
