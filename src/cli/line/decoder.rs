@@ -6,7 +6,8 @@ use std::collections::VecDeque;
 
 use crate::cli::line::event::InputEvent;
 use crate::cli::line::sequences::{
-    Utf8Decoder, Utf8Result
+    Utf8Decoder, Utf8Result,
+    CSIDecoder, CSIResult
 };
 
 enum DecoderState {
@@ -19,7 +20,8 @@ enum DecoderState {
 struct InputDecoder {
     state   : DecoderState,
     utf8    : Utf8Decoder,
-
+    
+    sequence_buffer : Vec<u8>,
     pending_events  : VecDeque<InputEvent>,
 }
 
@@ -31,7 +33,8 @@ impl InputDecoder {
             state   : DecoderState::Normal,
             utf8    : Utf8Decoder::new(),
             
-            pending_events : VecDeque::new(),
+            sequence_buffer : Vec::new(),
+            pending_events  : VecDeque::new(),
         }
     }
 
@@ -86,11 +89,11 @@ impl InputDecoder {
             },
             
             DecoderState::Escape => {
-                //
+                self._handle_escape(byte);
             },
 
             DecoderState::CSI => {
-                //
+                self._handle_csi(byte);
             },
 
         }
@@ -102,6 +105,7 @@ impl InputDecoder {
 
             // ESC
             b'\x1b' => {
+                self.sequence_buffer.push(byte);
                 self.state = DecoderState::Escape;
             },
 
@@ -135,6 +139,35 @@ impl InputDecoder {
             },
 
         }
+    }
+
+    fn _handle_escape(&mut self, byte: u8) {
+
+        match byte {
+
+            // Left bracket
+            b'\x5b' => {
+                self.sequence_buffer.push(byte);
+                self.state = DecoderState::CSI;
+            },
+
+            // invalid byte for CSI sequence
+            _ => {
+                self.sequence_buffer.push(byte);
+                let invalid = std::mem::take(&mut self.sequence_buffer);
+                
+                self.pending_events.push_back(
+                    InputEvent::Invalid(invalid)
+                );
+                
+                self.state = DecoderState::Normal;
+            },
+
+        }
+    }
+
+    fn _handle_csi(&mut self, byte: u8) {
+
     }
 
 }

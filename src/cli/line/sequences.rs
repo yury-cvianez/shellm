@@ -2,21 +2,22 @@
 responsible for the decoding sequences
 */
 
-pub struct Utf8Decoder {
-    buffer: Vec<u8>,
-    length: usize,
-}
 
+// UTF-8
 pub enum Utf8Result {
     Pending,
     Character(char),
     Invalid(Vec<u8>),
 }
 
+pub struct Utf8Decoder {
+    buffer: Vec<u8>,
+    length: usize,
+}
+
 impl Utf8Decoder {
 
     pub fn new() -> Self {
-        // initial state the character
         Utf8Decoder {
             buffer : Vec::new(),
             length : 0
@@ -84,5 +85,27 @@ impl Utf8Decoder {
         self.buffer.clear();
         self.length = 0;
     }
+
+}
+
+
+// CSI
+pub enum CSIResult {
+    ArrowLeft,
+    ArrowRight,
+    ArrowUp,
+    ArrowDown,   
+    Invalid(char)
+}
+
+pub struct CSIDecoder {   
+    specials_chars: Vec<u8>,
+}
+
+impl CSIDecoder{
+    pub fn new() -> Self {        
+        CSIDecoder { specials_chars: Vec::new() }
+    }
+
 
 }
