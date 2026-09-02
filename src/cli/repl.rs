@@ -1,1 +1,8 @@
-pub mod line;
+pub mod input;
+
+
+pub fn activate() {
+    loop {
+
+    }
+}

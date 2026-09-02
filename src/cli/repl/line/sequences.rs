@@ -1,5 +1,5 @@
 /* 
-responsible for the decoding sequences
+responsible for maintaining states until the sequences are decoded
 */
 
 
