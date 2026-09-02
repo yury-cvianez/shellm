@@ -4,8 +4,8 @@ A post-keyboard layer that interprets the type of event based on user input by a
 
 use std::collections::VecDeque;
 
-use crate::cli::line::event::InputEvent;
-use crate::cli::line::sequences::{
+use crate::cli::repl::line::event::InputEvent;
+use crate::cli::repl::line::sequences::{
     Utf8Decoder, Utf8Result,
     CSIDecoder, CSIResult
 };

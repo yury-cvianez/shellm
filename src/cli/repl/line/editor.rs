@@ -5,7 +5,7 @@
 use std::mem::replace;
 
 
-use crate::cli::line::event::InputEvent;
+use crate::cli::repl::line::event::InputEvent;
 
 
 struct LineEditor{
