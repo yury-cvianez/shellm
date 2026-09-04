@@ -1,4 +1,9 @@
-use libc::{tcgetattr, tcsetattr, termios, TCSANOW};
+use libc::{
+    tcgetattr,
+    tcsetattr, 
+    termios, 
+    TCSANOW
+};
 
 pub struct TermiosGuard {
     fd: i32,
@@ -6,7 +11,8 @@ pub struct TermiosGuard {
 }
 
 impl TermiosGuard {
-    pub fn new(fd: i32) -> Result<Self, std::io::Error> {
+
+    pub fn new(fd: i32) -> std::io::Result<Self> {
 
         let mut original_termios = unsafe { std::mem::zeroed() };
 
@@ -15,6 +21,26 @@ impl TermiosGuard {
         }        
 
         Ok(TermiosGuard{fd, original_termios})
+    }
+
+    pub fn enable_raw_mode(&self) -> std::io::Result<()> {
+
+        let mut raw_termios = self.original_termios;
+
+        raw_termios.c_lflag &= !(
+            libc::ECHO    | // echoes typed characters
+            libc::ICANON  | // line by line input 
+            libc::ISIG      // disables signals especial characters
+        );
+
+        raw_termios.c_cc[libc::VMIN] = 1; // minium number of bytes before read returns
+        raw_termios.c_cc[libc::VTIME] = 0; // timeout of read in tenths of a second
+
+        if unsafe { tcsetattr(self.fd, TCSANOW, &raw_termios) } != 0 {
+            return Err(std::io::Error::last_os_error());
+        }        
+
+        Ok(())
     }
 }
 
