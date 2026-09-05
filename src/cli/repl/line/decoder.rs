@@ -10,6 +10,7 @@ use crate::cli::repl::line::sequences::{
     CSIDecoder, CSIResult
 };
 
+#[derive(Debug)]
 enum DecoderState {
     // Defines states used to identify the input event.
     Normal,
@@ -41,14 +42,17 @@ impl InputDecoder {
     }
 
     pub fn feed_byte(&mut self, byte: u8) {
-        // processes an input byte and stores produced events.
+        println!("BEFORE: {:?}, byte: {:?}", self.state, byte);
 
-        if self.utf8.is_pending(){
+        if self.utf8.is_pending() {
             self._process_utf8(byte);
+            println!("AFTER: {:?}", self.state);
             return;
         }
 
         self._process_state(byte);
+
+        println!("AFTER: {:?}", self.state);
     }
 
     pub fn next_event(&mut self) -> Option<InputEvent> {
@@ -109,6 +113,27 @@ impl InputDecoder {
             b'\x1b' => {
                 self.sequence_buffer.push(byte);
                 self.state = DecoderState::Escape;
+            },
+
+            // Enter
+            b'\n' | b'\r' => {
+                self.pending_events.push_back(
+                    InputEvent::Enter
+                );
+            },
+
+            // Backspace
+            b'\x08' => {
+                self.pending_events.push_back(
+                    InputEvent::Backspace
+                );
+            },
+
+            // Delete 
+            b'\x7f' => {
+                self.pending_events.push_back(
+                    InputEvent::Delete
+                );
             },
 
             // ASCII

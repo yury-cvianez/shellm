@@ -13,6 +13,7 @@ pub struct LineEditor{
 impl LineEditor {
     
     pub fn new() -> Self {
+        
         LineEditor {
             buffer: Vec::new(),
             cursor: 0,
@@ -20,6 +21,9 @@ impl LineEditor {
     }
 
     pub fn process_input(&mut self, event: InputEvent) -> Option<String>{
+        
+        println!("Buffer: {:?}, Cursor: {}", self.buffer, self.cursor);
+        
         match event {
 
             InputEvent::Character(c) => {
