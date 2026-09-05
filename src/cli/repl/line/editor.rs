@@ -1,14 +1,10 @@
-/*
-
-*/
-
 use std::mem::replace;
 
 
 use crate::cli::repl::line::event::InputEvent;
 
 
-struct LineEditor{
+pub struct LineEditor{
     // Saves the real-time state of what the user types.
     buffer   : Vec<char>,
     cursor   : usize,
@@ -54,7 +50,6 @@ impl LineEditor {
                 None
             }
 
-
             InputEvent::Delete => {
                 if self.cursor < self.buffer.len() {
                     self.buffer.remove(self.cursor);
@@ -78,5 +73,4 @@ impl LineEditor {
 
     }
     
-
 }

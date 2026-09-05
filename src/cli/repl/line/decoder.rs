@@ -17,7 +17,7 @@ enum DecoderState {
     CSI,
 }
 
-struct InputDecoder {
+pub struct InputDecoder {
     state   : DecoderState,
     utf8    : Utf8Decoder,
     csi     : CSIDecoder,

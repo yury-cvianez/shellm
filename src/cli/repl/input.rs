@@ -1,4 +1,5 @@
 pub mod termguard;
+pub mod entryb;
 
 use std::os::unix::io::AsRawFd;
 
@@ -8,7 +9,7 @@ pub fn session() -> std::io::Result<()> {
     let _guard = termguard::TermiosGuard::new(fd).unwrap();
     _guard.enable_raw_mode().unwrap();
 
-    let mut buffer = [0u8, 1];
+    let mut buffer = [0u8; 1];
 
     loop {
         let n = unsafe {
@@ -29,8 +30,8 @@ pub fn session() -> std::io::Result<()> {
 
         let byte = buffer[0];
 
-        println!("read byte: {byte:#04x}");
-    }
+        entryb::process_entry_byte(byte);
+    };
 
     Ok(())
 
