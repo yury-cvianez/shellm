@@ -12,6 +12,6 @@ pub enum InputEvent {
     ArrowRight,
     
     Backspace,
-    Delete,
+    //Delete,
     Enter,
 }

@@ -54,12 +54,12 @@ impl LineEditor {
                 None
             }
 
-            InputEvent::Delete => {
-                if self.cursor < self.buffer.len() {
-                    self.buffer.remove(self.cursor);
-                }
-                None
-            }
+            // InputEvent::Delete => {
+            //     if self.cursor < self.buffer.len() {
+            //         self.buffer.remove(self.cursor);
+            //     }
+            //     None
+            // }
 
             InputEvent::Enter => {
                 let line = self.buffer.iter().collect::<String>();

@@ -93,7 +93,7 @@ impl Utf8Decoder {
 pub enum CSIResult {
     ArrowLeft,
     ArrowRight,
-    Delete,  
+    //Delete,  
     Invalid
 }
 
@@ -108,7 +108,7 @@ impl CSIDecoder {
         match buffer {
             [0x1b, b'[', b'C'] => CSIResult::ArrowRight,
             [0x1b, b'[', b'D'] => CSIResult::ArrowLeft,
-            [0x1b, b'[', b'3', b'~'] => CSIResult::Delete,
+            //[0x1b, b'[', b'3', b'~'] => CSIResult::Delete,
 
             _ => CSIResult::Invalid,
         }

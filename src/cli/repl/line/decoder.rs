@@ -42,17 +42,14 @@ impl InputDecoder {
     }
 
     pub fn feed_byte(&mut self, byte: u8) {
-        println!("BEFORE: {:?}, byte: {:?}", self.state, byte);
 
         if self.utf8.is_pending() {
             self._process_utf8(byte);
-            println!("AFTER: {:?}", self.state);
             return;
         }
 
         self._process_state(byte);
 
-        println!("AFTER: {:?}", self.state);
     }
 
     pub fn next_event(&mut self) -> Option<InputEvent> {
@@ -130,11 +127,11 @@ impl InputDecoder {
             },
 
             // Delete 
-            b'\x7f' => {
-                self.pending_events.push_back(
-                    InputEvent::Delete
-                );
-            },
+            // b'\x7f' => {
+            //     self.pending_events.push_back(
+            //         InputEvent::Delete
+            //     );
+            // },
 
             // ASCII
             b if b & 0b1000_0000 == 0 => {
@@ -230,13 +227,13 @@ impl InputDecoder {
                     self.state = DecoderState::Normal;
                 },
                 
-                CSIResult::Delete => {
-                    self.pending_events.push_back(
-                        InputEvent::Delete
-                    );
+                // CSIResult::Delete => {
+                //     self.pending_events.push_back(
+                //         InputEvent::Delete
+                //     );
                     
-                    self.state = DecoderState::Normal;
-                },
+                //     self.state = DecoderState::Normal;
+                // },
 
                 CSIResult::Invalid => {
                     self.pending_events.push_back(
