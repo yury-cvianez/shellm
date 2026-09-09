@@ -1,10 +1,11 @@
 pub mod input;
 pub mod line;
 
+use input::session::{Input};
 
 pub fn activate() -> std::io::Result<()> { 
     
-    let mut input_session = input::Input::new().unwrap();
+    let mut input_session = Input::new().unwrap();
 
     loop {
         
