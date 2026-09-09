@@ -10,7 +10,7 @@ use crate::cli::repl::line::sequences::{
     CSIDecoder, CSIResult
 };
 
-#[derive(Debug)]
+
 enum DecoderState {
     // Defines states used to identify the input event.
     Normal,
