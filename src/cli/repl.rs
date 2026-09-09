@@ -1,5 +1,6 @@
 pub mod input;
 pub mod line;
+pub mod lexer;
 
 use input::session::{Input};
 
