@@ -1,20 +1,23 @@
 
 
+#[derive(PartialEq)]
 enum StateToken {
     Normal,
     InQuote,
     InEscape,
 }
 
-enum Token {
+
+#[derive(Debug)]
+pub enum Token {
     Word(String),
     Pipe,
 }
 
 pub struct TokenCollector {
-    state   : StateToken,
-    tokens  : Vec<Token>,
-    t       : String, //current token
+    state           : StateToken,
+    buffer_tokens   : Vec<Token>,
+    ct              : String, //current token
 }
 
 impl TokenCollector {
@@ -22,32 +25,132 @@ impl TokenCollector {
     pub fn new() -> Self {
 
         TokenCollector {
-            state   : StateToken::Normal,
-            tokens  : Vec::new(),
-            t       : String::new(),
+            state           : StateToken::Normal,
+            buffer_tokens   : Vec::new(),
+            ct              : String::new(),
         }
 
     }
 
-    pub fn start_line(&mut self, line: String) {
+    pub fn iter_line(&mut self, line: String) -> std::io::Result<Vec<Token>>{
 
         self._reset();
 
         for c in line.chars() {
 
-            self.process_char(c);
+            self._process_char(c);
         }
+
+        let result = self._finish();
+        
+        return result;
     }
 
 
-    pub fn process_char(&mut self, c: char) {
+    fn _process_char(&mut self, c: char) {
+
+        match c {
+            ' ' => {
+                match self.state {
+                    StateToken::Normal => {
+                        if !self.ct.is_empty() {
+                            self.buffer_tokens.push(Token::Word(std::mem::take(&mut self.ct)));
+                        }
+                    },
+                    StateToken::InQuote => {
+                        self.ct.push(c);
+                    },
+                    StateToken::InEscape => {
+                        self.ct.push(c);
+                        self.state = StateToken::Normal;
+                    }
+                }
+
+            },
+            
+            '|' => {
+                match self.state {
+                    StateToken::Normal => {
+                        if !self.ct.is_empty() {
+                            self.buffer_tokens.push(Token::Word(std::mem::take(&mut self.ct)));
+                        }
+                        self.buffer_tokens.push(Token::Pipe);
+                    },
+                    StateToken::InQuote => {
+                        self.ct.push(c);
+                    },
+                    StateToken::InEscape => {
+                        self.ct.push(c);
+                        self.state = StateToken::Normal;
+                    }
+                }
+            },
+
+            '"' => {
+                match self.state {
+                    StateToken::Normal => {
+                        self.state = StateToken::InQuote;
+                    },
+                    StateToken::InQuote => {
+                        self.state = StateToken::Normal;
+                    },
+                    StateToken::InEscape => {
+                        self.ct.push(c);
+                        self.state = StateToken::Normal;
+                    }
+                }
+            },
+
+            '\\' => {
+                match self.state {
+                    StateToken::Normal => {
+                        self.state = StateToken::InEscape;
+                    },
+                    StateToken::InQuote => {
+                        self.ct.push(c);
+                    },
+                    StateToken::InEscape => {
+                        self.ct.push(c);
+                        self.state = StateToken::Normal;
+                    }
+                }
+            },
+
+            _ => {
+                self.ct.push(c)
+            }
+        }
+
+    }
+
+    fn _finish(&mut self) -> std::io::Result<Vec<Token>>  {
         
+        if self.state == StateToken::InQuote {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Unclosed quote sequence"
+                    )
+                )
+        }  else if self.state == StateToken::InEscape {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Unclosed escape sequence"
+                    )
+                )
+        }
+
+        if !self.ct.is_empty() {
+            self.buffer_tokens.push(Token::Word(std::mem::take(&mut self.ct)));
+        }
+
+        Ok(std::mem::take(&mut self.buffer_tokens))
+
     }
 
     fn _reset(&mut self) {
 
         self.state = StateToken::Normal;
-        self.tokens.clear();
-        self.t.clear();
+        self.buffer_tokens.clear();
+        self.ct.clear();
     }
 }
