@@ -7,6 +7,7 @@ use crate::completion::config::{
     URL,
 };
 
+use crate::completion::completer::{ Completer };
 use crate::completion::parse::{ parse_response, };
 
 pub struct RequestSlm {
@@ -18,16 +19,6 @@ impl RequestSlm {
         Self {
             url: URL.to_string(),
         }
-    }
-
-    pub fn complete(
-        &self,
-        prefix: &str,
-    ) -> Result<Vec<Completion>, CompletionError> {
-
-        let response = self.request(prefix)?;
-
-        parse_response(prefix, response)
     }
 
     fn request(
@@ -54,5 +45,17 @@ impl RequestSlm {
             .into_body()
             .read_json()
             .map_err(|e| CompletionError::Json(e.to_string()))
+    }
+}
+
+impl Completer for RequestSlm {
+    fn complete(
+        &self,
+        prefix: &str,
+    ) -> Result<Vec<Completion>, CompletionError> {
+
+        let response = self.request(prefix)?;
+
+        parse_response(prefix, response)
     }
 }

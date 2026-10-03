@@ -2,21 +2,24 @@ use std::mem::replace;
 
 
 use crate::cli::repl::line::event::InputEvent;
+use crate::completion::completer::{Completer};
 
 
-pub struct LineEditor{
+pub struct LineEditor<C: Completer>{
     // Saves the real-time state of what the user types.
     buffer   : Vec<char>,
     cursor   : usize,
+    completer: C,
 }
 
-impl LineEditor {
-    
-    pub fn new() -> Self {
-        
+impl<C: Completer> LineEditor<C> {
+
+    pub fn new(completer: C) -> Self {
+
         LineEditor {
             buffer: Vec::new(),
             cursor: 0,
+            completer,
         }
     }
 
@@ -69,6 +72,13 @@ impl LineEditor {
 
                 Some(line)
             }
+            
+            // call autocompletion
+            InputEvent::Tab => {
+                self.complete();
+                None
+            }
+            
             _ => {
                 // temp
                 None
@@ -76,5 +86,29 @@ impl LineEditor {
         }
 
     }
-    
+
+    fn complete(&mut self) {
+
+        let prefix = self.buffer.iter().collect::<String>();
+
+        let Ok(completions) = self.completer.complete(&prefix) else {
+            return;
+        };
+
+        let Some(completion) = completions.first() else {
+            return;
+        };
+
+        self.buffer.extend(completion.text.chars());
+
+        self.cursor = self.buffer.len();
+
+        println!(
+            "COMPLETION: {:?}, Cursor: {}",
+            self.buffer,
+            self.cursor
+        );
+        
+    }
+        
 }

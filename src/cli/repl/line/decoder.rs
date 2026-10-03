@@ -98,6 +98,7 @@ impl InputDecoder {
             DecoderState::CSI => {
                 self._handle_csi(byte);
             },
+            
 
         }
     }
@@ -123,6 +124,13 @@ impl InputDecoder {
             b'\x08' => {
                 self.pending_events.push_back(
                     InputEvent::Backspace
+                );
+            },
+            
+            // Tab
+            b'\t' => {
+                self.pending_events.push_back(
+                    InputEvent::Tab
                 );
             },
 

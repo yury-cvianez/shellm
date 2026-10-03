@@ -3,7 +3,7 @@ mod completion;
 
 fn main() {
     // activate the repl
-    //cli::repl::activate();
+    cli::repl::activate();
 
 
     // test autcomplete with qwen and llama.cp

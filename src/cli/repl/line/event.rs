@@ -14,4 +14,7 @@ pub enum InputEvent {
     Backspace,
     //Delete,
     Enter,
+
+    // tab key for autocompletion
+    Tab,
 }
