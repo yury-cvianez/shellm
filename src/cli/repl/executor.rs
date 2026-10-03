@@ -1,2 +1,2 @@
 pub mod mecha;
-pub mod phresolver;
+pub mod ptresolver;
