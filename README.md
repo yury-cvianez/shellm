@@ -1,4 +1,4 @@
-# shellm
+# sshelm
 
 This project enables LLMs to assist in executing operations within Unix command-line terminals.
 It integrates features such as autocomplete, correction suggestions, and the automation of repetitive tasks; it enhances safety by previewing the command's effect and allows users to determine the correct command simply by describing their objective.

@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 libc = "0.2.189"
+serde = { version = "1.0.229", features = ["derive"] }
+ureq =  { version = "3.4.2", features = ["json"] }
