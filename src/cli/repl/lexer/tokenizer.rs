@@ -1,4 +1,6 @@
 
+use std::fmt;
+
 
 #[derive(PartialEq)]
 enum StateToken {
@@ -6,7 +8,6 @@ enum StateToken {
     InQuote,
     InEscape,
 }
-
 
 #[derive(Debug)]
 pub enum Token {
@@ -206,5 +207,17 @@ impl TokenCollector {
         self.state = StateToken::Normal;
         self.buffer_tokens.clear();
         self.ct.clear();
+    }
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Token::Word(value) => write!(f, "{value}"),
+            Token::Pipe => write!(f, "|"),
+            Token::Redirect => write!(f, ">"),
+            Token::Append => write!(f, ">>"),
+            Token::Input => write!(f, "<"),
+        }
     }
 }

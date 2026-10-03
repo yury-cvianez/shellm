@@ -5,7 +5,6 @@ fn main() {
     // activate the repl
     cli::repl::activate();
 
-
     // test autcomplete with qwen and llama.cp
     // let qwen = completion::request::RequestSlm::new();
 

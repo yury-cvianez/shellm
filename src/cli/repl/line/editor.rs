@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::mem::replace;
 
 
@@ -5,11 +6,15 @@ use crate::cli::repl::line::event::InputEvent;
 use crate::completion::completer::{Completer};
 
 
+
+const PROMPT: &str = "$ ";
+
 pub struct LineEditor<C: Completer>{
     // Saves the real-time state of what the user types.
     buffer   : Vec<char>,
     cursor   : usize,
     completer: C,
+    completions: Vec<(String, String)>,
 }
 
 impl<C: Completer> LineEditor<C> {
@@ -20,14 +25,15 @@ impl<C: Completer> LineEditor<C> {
             buffer: Vec::new(),
             cursor: 0,
             completer,
+            completions: Vec::new(),
         }
     }
 
     pub fn process_input(&mut self, event: InputEvent) -> Option<String>{
         
-        println!("Buffer: {:?}, Cursor: {}", self.buffer, self.cursor);
+        //println!("Buffer: {:?}, Cursor: {}", self.buffer, self.cursor);
         
-        match event {
+        let result = match event {
 
             InputEvent::Character(c) => {
                 self.buffer.insert(self.cursor, c);
@@ -83,7 +89,13 @@ impl<C: Completer> LineEditor<C> {
                 // temp
                 None
             }
+        };
+
+        match result {
+            Some(_) => self.clear_line(), // a moldura vai ocupar o lugar da linha
+            None => self.render(),
         }
+        result
 
     }
 
@@ -102,13 +114,28 @@ impl<C: Completer> LineEditor<C> {
         self.buffer.extend(completion.text.chars());
 
         self.cursor = self.buffer.len();
-
-        println!(
-            "COMPLETION: {:?}, Cursor: {}",
-            self.buffer,
-            self.cursor
-        );
+        
+        let completed = self.buffer.iter().collect::<String>();
+        self.completions.push((prefix, completed)); 
         
     }
+
+    pub fn take_completions(&mut self) -> Vec<(String, String)> {
+        std::mem::take(&mut self.completions)
+    }
         
+    pub fn render(&self) {
+        let text: String = self.buffer.iter().collect();
+        let col = PROMPT.len() + self.cursor + 1; // \x1b[nG é 1-based
+        let mut out = std::io::stdout().lock();
+        let _ = write!(out, "\r\x1b[2K{PROMPT}{text}\x1b[{col}G");
+        let _ = out.flush(); // sem \n o stdout não descarrega sozinho
+    }
+
+    fn clear_line(&self) {
+        let mut out = std::io::stdout().lock();
+        let _ = write!(out, "\r\x1b[2K");
+        let _ = out.flush();
+    }
+
 }

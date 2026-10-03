@@ -4,6 +4,7 @@ use crate::cli::repl::executor::ptresolver::{
     PathResolverError,
 };
 
+use std::io::Read;
 use std::fs::{File, OpenOptions};
 use std::process::{Child, Command as ProcessCommand, Stdio};
 
@@ -30,14 +31,15 @@ impl Executor {
         }
     }
 
-
-    pub fn execute(&self, pipeline: Pipeline) -> Result<(), ExecutorError> {
+    pub fn execute(&self, pipeline: Pipeline) -> Result<String, ExecutorError>  {
 
         let mut children: Vec<Child> =
             Vec::with_capacity(pipeline.commands.len());
 
         let mut previous_stdout = None;
 
+        let (mut reader, writer) = std::io::pipe()
+            .map_err(|e| ExecutorError::SpawnFailed(e.to_string()))?;
 
         for (index, cmd) in pipeline.commands.iter().enumerate() {
 
@@ -60,10 +62,12 @@ impl Executor {
             }
 
 
-            if !is_last {
+            process.stderr(Self::capture(&writer)?);
+            if is_last {
+                process.stdout(Self::capture(&writer)?);
+            } else {
                 process.stdout(Stdio::piped());
             }
-
 
             for redirect in &cmd.redirections {
 
@@ -132,20 +136,32 @@ impl Executor {
 
             children.push(child);
         }
+        
+        // CRÍTICO: fecha a nossa ponta de escrita, senão read_to_end nunca vê EOF
+        drop(writer);
+
+        // lê ANTES de esperar: se o filho encher o buffer do pipe, ele bloqueia
+        let mut bytes = Vec::new();
+        reader
+            .read_to_end(&mut bytes)
+            .map_err(|e| ExecutorError::WaitFailed(e.to_string()))?;
 
         for mut child in children {
-
             child
                 .wait()
-                .map_err(|e| {
-                    ExecutorError::WaitFailed(
-                        e.to_string()
-                    )
-                })?;
+                .map_err(|e| ExecutorError::WaitFailed(e.to_string()))?;
         }
 
-        Ok(())
+        Ok(String::from_utf8_lossy(&bytes).into_owned())
     }
+
+    fn capture(writer: &std::io::PipeWriter) -> Result<Stdio, ExecutorError> {
+        writer
+            .try_clone()
+            .map(Stdio::from)
+            .map_err(|e| ExecutorError::SpawnFailed(e.to_string()))
+    }
+
 }
 
 

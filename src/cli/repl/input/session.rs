@@ -31,6 +31,7 @@ impl Input {
     }
 
     pub fn next_line(&mut self) -> std::io::Result<Option<String>> {
+        //self.editor.render(); 
 
         let mut buffer = [0u8; 1];
         
@@ -73,5 +74,9 @@ impl Input {
         }
 
         None
+    }
+
+    pub fn take_completions(&mut self) -> Vec<(String, String)> {
+        self.editor.take_completions()
     }
 }

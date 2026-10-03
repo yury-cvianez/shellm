@@ -1,3 +1,4 @@
+use std::fmt;
 
 #[derive(Debug)]
 pub struct Pipeline {
@@ -22,4 +23,14 @@ pub enum RedirectKind {
     Stdout, // >
     Append, // >>
     Stdin,  // <
+}
+
+impl fmt::Display for RedirectKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RedirectKind::Stdout => write!(f, ">"),
+            RedirectKind::Append => write!(f, ">>"),
+            RedirectKind::Stdin  => write!(f, "<"),
+        }
+    }
 }
