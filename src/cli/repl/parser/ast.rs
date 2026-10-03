@@ -19,5 +19,7 @@ pub struct Redirection {
 
 #[derive(Debug)]
 pub enum RedirectKind {
-    Stdout,
+    Stdout, // >
+    Append, // >>
+    Stdin,  // <
 }
