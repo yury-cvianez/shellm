@@ -12,12 +12,16 @@ enum StateToken {
 pub enum Token {
     Word(String),
     Pipe,
+    Redirect,      // >
+    Append,        // >>
+    Input,         // <
 }
 
 pub struct TokenCollector {
     state           : StateToken,
     buffer_tokens   : Vec<Token>,
     ct              : String, //current token
+    last_char       : Option<char>,
 }
 
 impl TokenCollector {
@@ -28,6 +32,7 @@ impl TokenCollector {
             state           : StateToken::Normal,
             buffer_tokens   : Vec::new(),
             ct              : String::new(),
+            last_char       : None,
         }
 
     }
@@ -56,6 +61,7 @@ impl TokenCollector {
                         if !self.ct.is_empty() {
                             self.buffer_tokens.push(Token::Word(std::mem::take(&mut self.ct)));
                         }
+                        self.last_char = None;
                     },
                     StateToken::InQuote => {
                         self.ct.push(c);
@@ -75,6 +81,54 @@ impl TokenCollector {
                             self.buffer_tokens.push(Token::Word(std::mem::take(&mut self.ct)));
                         }
                         self.buffer_tokens.push(Token::Pipe);
+                        self.last_char = None;
+                    },
+                    StateToken::InQuote => {
+                        self.ct.push(c);
+                    },
+                    StateToken::InEscape => {
+                        self.ct.push(c);
+                        self.state = StateToken::Normal;
+                    }
+                }
+            },
+
+            '>' => {
+                match self.state {
+                    StateToken::Normal => {
+                        if !self.ct.is_empty() {
+                            self.buffer_tokens.push(Token::Word(std::mem::take(&mut self.ct)));
+                        }
+                        
+                        if self.last_char == Some('>') {
+                            if let Some(Token::Redirect) = self.buffer_tokens.last() {
+                                self.buffer_tokens.pop();
+                            }
+                            self.buffer_tokens.push(Token::Append);
+                            self.last_char = None;
+                        } else {
+                            self.buffer_tokens.push(Token::Redirect);
+                            self.last_char = Some('>');
+                        }
+                    },
+                    StateToken::InQuote => {
+                        self.ct.push(c);
+                    },
+                    StateToken::InEscape => {
+                        self.ct.push(c);
+                        self.state = StateToken::Normal;
+                    }
+                }
+            },
+
+            '<' => {
+                match self.state {
+                    StateToken::Normal => {
+                        if !self.ct.is_empty() {
+                            self.buffer_tokens.push(Token::Word(std::mem::take(&mut self.ct)));
+                        }
+                        self.buffer_tokens.push(Token::Input);
+                        self.last_char = None;
                     },
                     StateToken::InQuote => {
                         self.ct.push(c);
